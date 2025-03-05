@@ -13,17 +13,6 @@ import java.util.UUID;
 @Table(name ="users")
 public class User {
 
-    public User(UUID id, String firstName, String lastName, String document, String email, String password, BigDecimal balance, UserType userType) {
-        this.id = id;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.document = document;
-        this.email = email;
-        this.password = password;
-        this.balance = balance;
-        this.userType = userType;
-    }
-
     @Id
     @GeneratedValue(generator = "uuid2")
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
@@ -48,18 +37,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserType userType;
 
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return Objects.equals(id, user.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public User(UUID id, String firstName, String lastName, String document, String email, String password, BigDecimal balance, UserType userType) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.document = document;
+        this.email = email;
+        this.password = password;
+        this.balance = balance;
+        this.userType = userType;
     }
 
     public UUID getId() {
@@ -125,4 +111,18 @@ public class User {
     public void setUserType(UserType userType) {
         this.userType = userType;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
 }
