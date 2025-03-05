@@ -30,6 +30,11 @@ public class Transaction {
     @NotNull
     private LocalDateTime timestamp;
 
+
+    public Transaction(){
+
+    }
+
     public Transaction(UUID id, BigDecimal amount, User sender, User receiver, LocalDateTime timestamp) {
         this.id = id;
         this.amount = amount;

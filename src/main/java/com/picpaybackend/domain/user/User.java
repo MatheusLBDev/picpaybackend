@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Pattern;
 import org.hibernate.annotations.GenericGenerator;
 
+
 import java.math.BigDecimal;
 import java.util.Objects;
 import java.util.UUID;
@@ -19,10 +20,10 @@ public class User {
     @Column(name = "id", columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name="firstName", columnDefinition = "TEXT", length=100)
+    @Column(name="firstName", length=100)
     @Pattern(regexp = "^[a-zA-Z]+$")
     private String firstName;
-    @Column(name="lastName", columnDefinition = "TEXT", length=100)
+    @Column(name="lastName", length=100)
     @Pattern(regexp = "^[a-zA-Z]+$")
     private String lastName;
     @Column(name ="document", unique = true)
