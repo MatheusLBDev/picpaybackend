@@ -24,7 +24,7 @@ public class UserService {
     }
 
     public void validateTransaction(User sender, BigDecimal amount) throws Exception {
-        if(sender.getUserType() == UserType.MERCHANT){
+        if(sender.getUserType() == UserType.MERCHANT || sender.getUserType() == null){
             throw new Exception("Logista não está autorizado a realizar transações");
         }
         if(sender.getBalance().compareTo(amount) < 0){
@@ -49,7 +49,7 @@ public class UserService {
 
     public void saveUser(User user) {
         try {
-            repository.save(user);
+            this.repository.save(user);
         } catch (RuntimeException e) {
             throw e;
         }

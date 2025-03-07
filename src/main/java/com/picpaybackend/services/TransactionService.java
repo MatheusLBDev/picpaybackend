@@ -20,39 +20,45 @@ public class TransactionService {
     private final UserService userService;
     private final TransactionRepository repository;
     private final RestTemplate restTemplate;
+    private final NotificationService notificationService;
 
     @Autowired
-    public TransactionService(UserService userService, TransactionRepository repository, RestTemplate restTemplate) {
+    public TransactionService(UserService userService, TransactionRepository repository, RestTemplate restTemplate, NotificationService notificationService) {
         this.userService = userService;
         this.repository = repository;
         this.restTemplate = restTemplate;
+        this.notificationService = notificationService;
     }
 
-    public void createTransaction(TransactionDTO transaction) throws Exception{
-        User sender = this.userService.findUserById(transaction.senderId());
-        User receiver = this.userService.findUserById(transaction.receiverId());
+    public Transaction createTransaction(TransactionDTO transactionDTO) throws Exception{
+        User sender = this.userService.findUserById(transactionDTO.senderId());
+        User receiver = this.userService.findUserById(transactionDTO.receiverId());
 
-        userService.validateTransaction(sender, transaction.value());
+        userService.validateTransaction(sender, transactionDTO.value());
 
-        boolean isAuthorized = this.authorizeTransaction(sender, transaction.value());
+        boolean isAuthorized = this.authorizeTransaction(sender, transactionDTO.value());
 
         if(!isAuthorized){
             throw new Exception("Transação não autorizada");
         }
 
-        Transaction newTransaction = new Transaction();
-        newTransaction.setAmount(transaction.value());
-        newTransaction.setSender(sender);
-        newTransaction.setReceiver(receiver);
-        newTransaction.setTimestamp(LocalDateTime.now());
+        Transaction transaction = new Transaction();
+        transaction.setAmount(transactionDTO.value());
+        transaction.setSender(sender);
+        transaction.setReceiver(receiver);
+        transaction.setTimestamp(LocalDateTime.now());
 
-        sender.setBalance(sender.getBalance().subtract(transaction.value()));
-        receiver.setBalance(receiver.getBalance().add(transaction.value()));
+        sender.setBalance(sender.getBalance().subtract(transactionDTO.value()));
+        receiver.setBalance(receiver.getBalance().add(transactionDTO.value()));
 
-        repository.save(newTransaction);
+        repository.save(transaction);
         userService.saveUser(sender);
         userService.saveUser(receiver);
 
+        notificationService.sendNotification(sender, "Transação concluída com sucesso" );
+        notificationService.sendNotification(receiver, "Transação concluída com sucesso" );
+
+        return transaction;
     }
 
     public boolean authorizeTransaction(User sender, BigDecimal value) {
