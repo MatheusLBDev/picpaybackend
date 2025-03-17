@@ -30,7 +30,6 @@ public class Transaction {
     @NotNull
     private LocalDateTime timestamp;
 
-
     public Transaction(){
 
     }

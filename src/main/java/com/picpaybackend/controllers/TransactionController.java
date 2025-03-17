@@ -27,5 +27,4 @@ public class TransactionController {
         Transaction transaction = transactionService.createTransaction(transactionDTO);
         return new ResponseEntity<>(transaction, HttpStatus.OK);
     }
-
 }
