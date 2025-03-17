@@ -4,6 +4,7 @@ import com.picpaybackend.domain.transaction.Transaction;
 import com.picpaybackend.domain.user.User;
 import com.picpaybackend.dtos.TransactionDTO;
 import com.picpaybackend.repositories.TransactionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +18,9 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 public class TransactionService {
@@ -69,6 +72,66 @@ public class TransactionService {
         }
 
         return transaction;
+    }
+
+    @Transactional
+    public void revertTransaction(Transaction transactionId) throws Exception {
+        Transaction originalTransaction= findTransactionsById(transactionId.getId());
+
+        if (originalTransaction.isReversed()) {
+            throw new Exception("Esta transação já foi revertida.");
+        }
+
+        User sender = originalTransaction.getSender();
+        User receiver = originalTransaction.getReceiver();
+        BigDecimal amount = originalTransaction.getAmount();
+
+        if (sender == null || receiver == null || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new Exception("Transação inválida para reversão");
+        }
+
+        if (receiver.getBalance().compareTo(amount) < 0) {
+            throw new Exception("O destinatário não tem saldo suficiente para devolver o valor");
+        }
+
+        receiver.setBalance(receiver.getBalance().subtract(amount));
+        sender.setBalance(sender.getBalance().add(amount));
+
+        originalTransaction.setReversed(true);
+        repository.save(originalTransaction);
+
+        Transaction reversalTransaction = new Transaction();
+        reversalTransaction.setSender(receiver);
+        reversalTransaction.setReceiver(sender);
+        reversalTransaction.setAmount(amount);
+        reversalTransaction.setTimestamp(LocalDateTime.now());
+        reversalTransaction.setReversed(true);
+        repository.save(reversalTransaction);
+
+        logger.info("Transação de reversão criada. ID da transação original: {}, ID da reversão: {}",
+            originalTransaction.getId(), reversalTransaction.getId());
+
+        try {
+            notificationService.sendNotification(sender, "Sua transação foi revertida com sucesso.");
+            notificationService.sendNotification(receiver, "A transação foi revertida, o valor foi devolvido.");
+        } catch (Exception e) {
+            logger.warn("Falha ao enviar notificação para os usuários.");
+        }
+    }
+
+    public Transaction findTransactionsById(final UUID id) {
+        try {
+            return repository.findTransactionsById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Transação não encontrado com o ID: " + id));
+        } catch (EntityNotFoundException e) {
+            logger.error("Transação não encontrado com o ID: {}", id, e);
+            throw e;
+        }
+    }
+
+    public List<Transaction> getAllTransactions() {
+        logger.info("Buscando todas transações cadastradas.");
+        return repository.findAll();
     }
 
     public void authorizeTransaction(User sender, BigDecimal value) throws HttpClientErrorException, HttpServerErrorException {

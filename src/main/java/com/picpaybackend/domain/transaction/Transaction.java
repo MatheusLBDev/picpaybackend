@@ -29,6 +29,8 @@ public class Transaction {
     @Column(name = "timestamp")
     @NotNull
     private LocalDateTime timestamp;
+    @Column(name="reversed")
+    private boolean isReversed;
 
     public Transaction(){
 
@@ -81,6 +83,15 @@ public class Transaction {
     public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
+
+    public boolean isReversed() {
+        return isReversed;
+    }
+
+    public void setReversed(boolean reversed) {
+        isReversed = reversed;
+    }
+
 
     @Override
     public boolean equals(Object o) {
